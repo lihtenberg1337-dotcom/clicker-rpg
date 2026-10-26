@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fantasy Clicker RPG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Верхняя статистика -->
+        <div class="stats-panel">
+            <div class="gold-display" id="gold-count">0 💰</div>
+            <div class="stats-row">
+                <div class="gps-display" id="gps-count">Пассивный доход: 0/сек</div>
+                <div class="gpc-display" id="gpc-count">За клик: 1</div>
+            </div>
+            <!-- HTML: Текущий титул (множитель Золотого Сундука) -->
+            <div class="title-display" id="title-count">⚜ Титул: Новичок (×1)</div>
+            <!-- HTML: Экипированное оружие с критами (угол HUD) -->
+            <div class="equip-hint hidden" id="equip-hint">Оружие: Кинжал Удачи [+5% Крит]</div>
+
+            <!-- HTML: Кнопка отзыва — верхний правый угол HUD -->
+            <button class="feedback-btn" id="feedback-btn">📝 Оставить отзыв / Сообщить о баге</button>
+        </div>
+
+        <!-- HTML: Центральная зона — Золотая Монета и экран Подземелья -->
+        <div class="center-panel" id="center-panel">
+            <div class="click-zone" id="click-zone">
+                <div id="coin-target" role="button" tabindex="0" aria-label="Золотая монета">
+                    <span class="coin-face">🪙</span>
+                </div>
+
+                <!-- HTML: Золотой сундук — случайно появляется на арене -->
+                <div id="chest-target" class="hidden" role="button" tabindex="0" aria-label="Золотой сундук">
+                    <span class="chest-face">🧰</span>
+                </div>
+
+                <!-- HTML: Экран Подземелья (монета в это время скрыта) -->
+                <div id="dungeon-screen" class="hidden">
+                    <div id="puzzle-view">
+                        <div class="puzzle-title">Взломай замок</div>
+                        <div class="puzzle-timer"><div id="puzzle-timer-fill"></div></div>
+                        <div class="puzzle-target" id="puzzle-target"></div>
+                        <div class="puzzle-keys">
+                            <button class="arrow-btn" data-dir="L">←</button>
+                            <button class="arrow-btn" data-dir="U">↑</button>
+                            <button class="arrow-btn" data-dir="R">→</button>
+                            <button class="arrow-btn" data-dir="D">↓</button>
+                        </div>
+                        <div class="puzzle-status" id="puzzle-status"></div>
+                    </div>
+
+                    <div id="secret-boss" class="hidden">
+                        <div class="secret-title">СЕКРЕТНЫЙ БОСС</div>
+                        <div id="secret-boss-name">Король-Лич</div>
+                        <div id="secret-hp-container">
+                            <div id="secret-hp-fill"></div>
+                            <span id="secret-hp-text">0 / 0 HP</span>
+                        </div>
+                        <div class="boss-img-wrap">
+                            <img id="secret-boss-img" src="images/lich.png" alt="Король-Лич">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HTML: Вкладки — переключают зоны только на мобилках -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="sec-gear">Снаряжение</button>
+            <button class="tab-btn" data-tab="sec-inventory">Предметы</button>
+            <button class="tab-btn" data-tab="sec-dungeon">Подземелье</button>
+        </div>
+
+        <!-- HTML: Левая колонка — магазин и наёмники -->
+        <div class="left-panel" id="left-panel">
+            <div class="panel-cracks"></div>
+            <div class="upgrades-panel">
+                <!-- Вкладка: Снаряжение (sec-gear) -->
+                <div class="tab-page" id="sec-gear">
+                    <div class="stat-bonus" id="stat-bonus"></div>
+
+                    <!-- HTML: Магазин — три под-вкладки -->
+                    <div class="shop-tabs">
+                        <button class="shop-tab-btn active" data-shop="shop-combat">Боевые навыки (Клик)</button>
+                        <button class="shop-tab-btn" data-shop="shop-passive">Ресурсы (Пассив)</button>
+                        <button class="shop-tab-btn" data-shop="shop-profile">Профиль</button>
+                        <button class="shop-tab-btn" data-shop="shop-guild">Торговая Гильдия</button>
+                    </div>
+
+                    <!-- Вкладка: Боевые навыки (клик-апгрейды) -->
+                    <div class="shop-page" id="shop-combat">
+                        <div id="click-upgrades-list">
+                            <!-- JS рендерит линейку клик-апгрейдов из gameState.clickUpgrades -->
+                        </div>
+                    </div>
+
+                    <!-- Вкладка: Ресурсы (пассивный доход) -->
+                    <div class="shop-page hidden" id="shop-passive">
+                        <div id="passive-buildings-list">
+                            <!-- JS рендерит линейку построек из gameState.passiveBuildings -->
+                        </div>
+                    </div>
+
+                    <!-- HTML: Вкладка «Профиль» — информационный центр -->
+                    <div class="shop-page hidden" id="shop-profile">
+                        <div class="profile-head">
+                            <div class="profile-title-label">Текущий титул</div>
+                            <div class="profile-title-name" id="profile-title-name">Новичок</div>
+                            <div class="profile-title-mult" id="profile-title-mult">Множитель сундуков: x1</div>
+                        </div>
+
+                        <div class="profile-stats">
+                            <div class="profile-stat"><span>Сила клика (GPC)</span><b id="profile-gpc">1</b></div>
+                            <div class="profile-stat"><span>Шанс крита</span><b id="profile-crit">0%</b></div>
+                            <div class="profile-stat"><span>Пассивный доход (GPS)</span><b id="profile-gps">0/сек</b></div>
+                            <div class="profile-stat"><span>Всего добыто золота за всё время</span><b id="profile-total">0</b></div>
+                        </div>
+
+                        <!-- HTML: СНАРЯЖЕНИЕ — три слота (процентные множители) -->
+                        <div class="equip-block">
+                            <div class="equip-caption">Снаряжение</div>
+                            <div class="equip-slots" id="equip-slots">
+                                <!-- JS рендерит слоты: Оружие / Инструмент / Артефакт -->
+                            </div>
+                        </div>
+
+                        <!-- HTML: ДЕРЕВО ТАЛАНТОВ (чуть ниже статистики) -->
+                        <div class="talent-tree">
+                            <div class="talent-header">Доступно очков талантов: <b id="talent-points">3</b></div>
+                            <div class="talent-columns" id="talent-columns">
+                                <!-- JS рендерит три ветки: Воин / Алхимик / Искатель -->
+                            </div>
+                        </div>
+
+                        <div class="titles-caption">Титулы и множители сундуков</div>
+                        <div class="titles-table" id="titles-table">
+                            <!-- JS рендерит строки из TITLES -->
+                        </div>
+                    </div>
+
+                    <!-- HTML: Вкладка «Торговая Гильдия» — торговые экспедиции (караваны) -->
+                    <div class="shop-page hidden" id="shop-guild">
+                        <div class="guild-card">
+                            <div class="guild-caption">🚗 Торговая Гильдия</div>
+                            <p class="guild-hint">Отправляй караван по дорогам королевства: 5 минут в пути — и он вернётся с золотом. Чем выше твой пассивный доход, тем богаче торговый путь.</p>
+                            <div class="guild-row">
+                                <span class="guild-mult" id="caravan-mult">Множитель лицензий: ×1</span>
+                            </div>
+                            <div class="guild-timer" id="caravan-timer">Нужен пассивный доход (GPS > 0), чтобы отправить караван</div>
+                            <button class="guild-btn" id="send-caravan-btn">Отправить Караван (5 мин)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HTML: Правая колонка — рюкзак и подземелье -->
+        <div class="right-panel" id="right-panel">
+            <div class="panel-cracks"></div>
+            <div class="upgrades-panel">
+                <!-- HTML: Вкладка «Предметы» — каталог всего снаряжения -->
+                <div class="tab-page hidden" id="sec-inventory">
+                    <div class="titles-caption">Каталог предметов</div>
+                    <div id="inventory-grid">
+                        <!-- JS рендерит ячейки .inventory-slot с надетыми предметами -->
+                    </div>
+                </div>
+
+                <!-- HTML: Вкладка «Подземелье» -->
+                <div class="tab-page hidden" id="sec-dungeon">
+                    <p class="dungeon-hint">Головоломка «Взломай замок»: 4 стрелки за 4 секунды. Успех — золото (ур. × 50), 10% шанс на Секретного Босса, 10% шанс на предмет в рюкзак.</p>
+                    <button class="dungeon-btn" id="enter-dungeon-btn">Войти в Подземелье</button>
+                    <p class="dungeon-cool" id="dungeon-cool">Готово к входу (раз в 30 секунд)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HTML: Тост о выпавшем луте -->
+        <div id="loot-toast" class="hidden">
+            <div class="loot-title">Найдено в Подземелье</div>
+            <div class="loot-name" id="loot-name"></div>
+            <div class="loot-desc" id="loot-desc"></div>
+        </div>
+    </div>
+
+    <!-- HTML: Затемнение под модалкой отзыва -->
+    <div id="feedback-overlay"></div>
+
+    <!-- HTML: Модалка отзыва — Google Форма внутри iframe -->
+    <div id="feedbackModal">
+        <button class="feedback-close" id="feedback-close" aria-label="Закрыть">✕</button>
+        <div class="feedback-title">📝 Отзыв тестера / Сообщить о баге</div>
+        <div class="feedback-frame">
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfrHmLt3FwXzu5K6GGlWEjlSm9oFpjKxw72t0lp-JDyLlshKQ/viewform?usp=publish-editor" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Загрузка...</iframe>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

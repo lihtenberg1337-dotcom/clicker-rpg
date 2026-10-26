@@ -1,0 +1,1524 @@
+        /* --- СТИЛИ И ИНТЕРФЕЙС (CSS) --- */
+        :root {
+            --bg-color: #0f111a;
+            --panel-color: #1a1d2e;
+            --accent-color: #ffaa00;
+            --text-color: #e2e8f0;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Верхняя панель: Статистика */
+        .stats-panel {
+            position: relative;   /* якорь для кнопки отзыва (верхний правый угол) */
+            background: var(--panel-color);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* ============================================================
+           ОТЗЫВ ТЕСТЕРА: кнопка в углу HUD + модалка с Google Формой
+           Правило трещин: у кнопки и содержимого модалки z-index выше
+           любых декоративных линий (panel-cracks живёт на z-index: 0).
+           ============================================================ */
+        .feedback-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 2;              /* поверх фоновых декораций панели */
+            max-width: 170px;
+            padding: 5px 9px;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1.25;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+        }
+
+        .feedback-btn:hover {
+            color: var(--accent-color);
+            border-color: rgba(255, 170, 0, 0.55);
+            box-shadow: 0 0 12px rgba(255, 170, 0, 0.35);
+        }
+
+        /* Полупрозрачный задний фон: игра слегка затенена, но продолжает жить */
+        #feedback-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 9999;
+        }
+
+        /* Сама модалка — строго поверх всей игры */
+        #feedbackModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            width: min(560px, calc(100vw - 24px));
+            box-sizing: border-box;
+            padding: 16px 14px 14px;
+            background: #0d101b;
+            border: 1px solid rgba(255, 170, 0, 0.45);
+            border-radius: 14px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 0 26px rgba(255, 170, 0, 0.05);
+        }
+
+        .feedback-title {
+            position: relative;
+            z-index: 1;              /* заголовок поверх любых декоративных линий */
+            text-align: center;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+            margin-bottom: 10px;
+            padding: 0 26px;
+        }
+
+        .feedback-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 2;              /* крестик всегда кликабелен */
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+
+        .feedback-close:hover {
+            color: #ff5f5f;
+            border-color: rgba(255, 95, 95, 0.65);
+            transform: rotate(90deg);
+        }
+
+        /* Рамка формы: iframe строго поверх фоновых линий, ничего не перекрывает поля */
+        .feedback-frame {
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .feedback-frame iframe {
+            display: block;
+            width: 100%;
+            height: 500px;
+            border: 0;
+            background: #fff;
+        }
+
+        /* На узких экранах форма ниже, чтобы не вылезала за viewport */
+        @media (max-width: 600px) {
+            .feedback-frame iframe { height: 60vh; }
+        }
+
+        .gold-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .gps-display {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Центральная зона: Главная кнопка / Клик */
+        .click-zone {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* === CSS: ТРИ ЗОНЫ HUD (на ПК встают в ряд, на мобилках стеком) === */
+        .center-panel {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .left-panel,
+        .right-panel {
+            width: 100%;
+            min-width: 0;
+            position: relative;        /* якорь для золотых трещин */
+        }
+
+        /* === CSS: ЗОЛОТЫЕ ТРЕЩИНЫ (медленная пульсация ауры) === */
+        .panel-cracks {
+            position: absolute;
+            inset: 0;
+            z-index: 0;        /* трещины уходят на задний план */
+            pointer-events: none;
+            opacity: 0.45;
+            background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%27320%27%20viewBox%3D%270%200%20240%20320%27%20preserveAspectRatio%3D%27none%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23ffaa00%27%20stroke-width%3D%271.4%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M0%2034%20L36%2058%20L70%2048%20L104%2086%20L132%2074%27/%3E%3Cpath%20d%3D%27M240%2064%20L206%2092%20L182%20128%20L212%20156%27/%3E%3Cpath%20d%3D%27M0%20196%20L42%20224%20L74%20262%20L64%20320%27/%3E%3Cpath%20d%3D%27M240%20232%20L200%20254%20L176%20296%27/%3E%3Cpath%20d%3D%27M104%2086%20L126%20118%20L112%20156%20L136%20186%27/%3E%3Cpath%20d%3D%27M74%20262%20L116%20284%20L154%20268%27/%3E%3Cpath%20d%3D%27M36%2058%20L24%2096%20L44%20124%27/%3E%3C/g%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23c5a059%27%20stroke-width%3D%270.9%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M0%20112%20L28%20134%20L58%20126%27/%3E%3Cpath%20d%3D%27M240%20168%20L212%20186%20L226%20214%27/%3E%3Cpath%20d%3D%27M112%20156%20L84%20176%27/%3E%3Cpath%20d%3D%27M154%20268%20L182%20300%27/%3E%3Cpath%20d%3D%27M136%20186%20L168%20200%27/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            animation: goldPulse 5s ease-in-out infinite;
+        }
+
+        /* Дыхание магики: мягче на 0/100%, неоновый всплеск на 50% */
+        @keyframes goldPulse {
+            0%, 100% {
+                opacity: 0.45;
+                filter: drop-shadow(0 0 4px rgba(255, 170, 0, 0.35));
+            }
+            50% {
+                opacity: 0.62;
+                filter: drop-shadow(0 0 14px rgba(255, 170, 0, 0.65)) drop-shadow(0 0 3px rgba(255, 226, 140, 0.9));
+            }
+        }
+
+        /* === CSS: ЗОЛОТАЯ МОНЕТА (главная цель) === */
+        #coin-target {
+            position: relative;
+            width: clamp(150px, 46vw, 210px);
+            height: clamp(150px, 46vw, 210px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 700px;
+            cursor: pointer;
+            outline: none;
+            -webkit-user-select: none;
+            user-select: none;
+            background: radial-gradient(circle at 32% 26%, #ffe9a8 0%, #ffcc4d 26%, #e0b354 55%, #a67c2e 85%, #7a5a20 100%);
+            border: 5px solid #c5a059;
+            box-shadow:
+                0 0 38px rgba(255, 170, 0, 0.38),
+                0 14px 30px rgba(0, 0, 0, 0.55),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.35),
+                inset 0 10px 20px rgba(255, 255, 255, 0.35);
+            transition: transform 0.08s ease, box-shadow 0.2s ease;
+        }
+
+        #coin-target:hover {
+            box-shadow:
+                0 0 54px rgba(255, 170, 0, 0.55),
+                0 14px 30px rgba(0, 0, 0, 0.55),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.35),
+                inset 0 10px 20px rgba(255, 255, 255, 0.45);
+        }
+
+        /* Сжатие при зажатии */
+        #coin-target:active {
+            transform: scale(0.92);
+        }
+
+        /* Рельеф внутри монеты: 3D-покачивание */
+        .coin-face {
+            font-size: clamp(58px, 20vw, 92px);
+            line-height: 1;
+            animation: coinIdle 3.2s ease-in-out infinite;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+        }
+
+        @keyframes coinIdle {
+            0%, 100% { transform: translateY(0) rotateY(-24deg) rotate(-4deg); }
+            50%      { transform: translateY(-12px) rotateY(24deg) rotate(4deg); }
+        }
+
+        /* Золотые искры при клике */
+        .coin-spark {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff6c9 0%, var(--accent-color) 55%, rgba(255, 170, 0, 0) 100%);
+            box-shadow: 0 0 8px rgba(255, 200, 60, 0.9);
+            pointer-events: none;
+            animation: sparkFly 0.62s ease-out forwards;
+        }
+
+        @keyframes sparkFly {
+            0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.15); }
+        }
+
+        #boss-name,
+        #secret-boss-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-align: center;
+            text-shadow: 0 0 12px rgba(255, 170, 0, 0.35), 0 2px 3px rgba(0,0,0,0.8);
+            letter-spacing: 0.5px;
+        }
+
+        /* HP-бар босса */
+        #hp-container,
+        #secret-hp-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            height: 22px;
+            background: #0b0d16;
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 11px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        #hp-fill,
+        #secret-hp-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff1100 0%, #ff6b35 100%);
+            box-shadow: 0 0 12px rgba(255, 17, 0, 0.6) inset;
+            transition: width 0.15s ease-out;
+        }
+
+        #hp-text,
+        #secret-hp-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px #000, 0 0 4px #000;
+        }
+
+        /* Обертка и картинка босса */
+        .boss-img-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #boss-img,
+        #secret-boss-img {
+            max-width: 260px;
+            width: 100%;
+            height: auto;
+            max-height: 260px;
+            object-fit: contain;
+            cursor: pointer;
+            outline: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            filter: drop-shadow(0 8px 18px rgba(0,0,0,0.6));
+            /* idle-покачивание */
+            animation: bossIdle 3s ease-in-out infinite;
+            transition: transform 0.05s ease;
+        }
+
+        #boss-img:active,
+        #secret-boss-img:active {
+            transform: scale(0.94);
+        }
+
+        /* Секретный босс: HP-бар в фиолетовых тонах */
+        #secret-hp-fill {
+            background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.6) inset;
+        }
+
+        @keyframes bossIdle {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-14px); }
+        }
+
+        /* Эффект удара: сжатие + красная вспышка */
+        #boss-img.hit-effect,
+        #secret-boss-img.hit-effect {
+            animation: bossIdle 3s ease-in-out infinite, bossHit 0.18s ease-out;
+        }
+
+        @keyframes bossHit {
+            0%   { transform: scale(1.06); filter: brightness(3) saturate(0); }
+            35%  { transform: scale(0.86); filter: brightness(1.7) sepia(1) saturate(8) hue-rotate(-30deg); }
+            100% { transform: scale(1);    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.6)); }
+        }
+
+        /* Всплывающие цифры урона/клика */
+        .floating-text {
+            position: absolute;
+            color: var(--accent-color);
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.6s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+        }
+
+        /* === CSS: КРИТИЧЕСКИЙ УДАР === */
+        .floating-text.crit {
+            color: #ff1100;
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 17, 0, 0.9), 0 0 26px rgba(255, 17, 0, 0.55), 0 2px 4px rgba(0,0,0,0.8);
+            animation: floatUpCrit 0.75s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes floatUpCrit {
+            0%   { opacity: 1; transform: translateY(0) scale(0.5) rotate(-4deg); }
+            25%  { opacity: 1; transform: translateY(-18px) scale(1.3) rotate(2deg); }
+            100% { opacity: 0; transform: translateY(-110px) scale(1) rotate(0deg); }
+        }
+
+        /* Уровень/количество внутри названия апгрейда магазина */
+        .upg-lvl {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-color);
+            background: rgba(255, 170, 0, 0.12);
+            border: 1px solid rgba(255, 170, 0, 0.35);
+            border-radius: 999px;
+            padding: 1px 7px;
+            margin-left: 6px;
+            vertical-align: 1px;
+            white-space: nowrap;
+        }
+
+        /* Оружие с критами — Кинжал Удачи в углу HUD */
+        .equip-hint {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            border-radius: 999px;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+        }
+
+        /* Нинняя панель: Улучшения (контент поверх трещин) */
+        .upgrades-panel {
+            position: relative;
+            z-index: 2;
+            background: rgba(26, 29, 46, 0.82);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            /* убираем дефолтный скроллбар браузера */
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) #11131c;
+        }
+
+        /* Кастомный скроллбар панели (золото) */
+        .upgrades-panel::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .upgrades-panel::-webkit-scrollbar-track {
+            background: #11131c;
+            border-radius: 6px;
+        }
+
+        .upgrades-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-color) 0%, #c5a059 100%);
+            border-radius: 6px;
+            box-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+        }
+
+        .upgrades-panel::-webkit-scrollbar-thumb:hover {
+            background: #ffcc55;
+        }
+
+        .upgrades-panel::-webkit-scrollbar-thumb:active {
+            background: #ffe08a;
+        }
+
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .upgrade-info h4 {
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+
+        .upgrade-info p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .upgrade-btn {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .upgrade-btn:disabled {
+            background: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* === CSS: ВКЛАДКИ НИЖНЕЙ ПАНЕЛИ === */
+        .hidden { display: none !important; }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            background: var(--panel-color);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(255,170,0,0.14);
+            color: var(--accent-color);
+            border-color: rgba(255,170,0,0.55);
+            box-shadow: 0 0 10px rgba(255,170,0,0.18);
+        }
+
+        .tab-page {
+            position: relative;
+            z-index: 2;
+            display: block;
+        }
+
+        .stat-bonus {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* === CSS: СЕТКА РЮКЗАКА (СЛОТЫ ЛУТА) === */
+        #inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .inventory-slot {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            min-width: 70px;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 6px 4px;
+            background: #0b0d16;
+            border: 2px solid rgba(255,255,255,0.10);
+            border-radius: 10px;
+            box-shadow: inset 0 0 14px rgba(0,0,0,0.75);
+            text-align: center;
+        }
+
+        /* Неоновая подсветка рамки по редкости */
+        .inventory-slot.rarity-common {
+            border-color: #94a3b8;
+            box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 8px rgba(148, 163, 184, 0.35);
+        }
+
+        .inventory-slot.rarity-rare {
+            border-color: #3b82f6;
+            box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .inventory-slot.rarity-epic {
+            border-color: #a855f7;
+            box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 12px rgba(168, 85, 247, 0.55);
+        }
+
+        .inventory-slot.equipped {
+            background: #141830;
+            transform: translateY(-2px);
+        }
+
+        .inventory-slot.equipped.rarity-common  { box-shadow: inset 0 0 14px rgba(0,0,0,0.6), 0 0 16px rgba(148, 163, 184, 0.75); }
+        .inventory-slot.equipped.rarity-rare    { box-shadow: inset 0 0 14px rgba(0,0,0,0.6), 0 0 18px rgba(59, 130, 246, 0.8); }
+        .inventory-slot.equipped.rarity-epic    { box-shadow: inset 0 0 14px rgba(0,0,0,0.6), 0 0 20px rgba(168, 85, 247, 0.85); }
+
+        .slot-icon {
+            font-size: 22px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
+        }
+
+        .slot-bonus {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--accent-color);
+            line-height: 1;
+        }
+
+        .slot-btn {
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+            color: var(--text-color);
+            font-size: 9px;
+            font-weight: bold;
+            line-height: 1;
+            padding: 3px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .slot-btn:hover {
+            background: rgba(255,170,0,0.22);
+        }
+
+        .slot-btn.on {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+        }
+
+        /* Заглушка пустого рюкзака — в виде «пустого слота» */
+        .inv-empty {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 92px;
+            padding: 14px 12px;
+            background: #0b0d16;
+            border: 2px dashed rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.75);
+            color: var(--text-dim);
+            font-size: 12px;
+            line-height: 1.35;
+            text-align: center;
+            transition: border-color 0.25s ease;
+        }
+
+        .inv-empty:hover {
+            border-color: rgba(255, 170, 0, 0.45);
+        }
+
+        .inv-empty .empty-icon {
+            font-size: 26px;
+            line-height: 1;
+            opacity: 0.8;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8));
+        }
+
+        /* === CSS: ПОДЗЕМЕЛЬЕ === */
+        .dungeon-hint {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .dungeon-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .dungeon-btn:disabled {
+            background: #475569;
+            color: #94a3b8;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .dungeon-cool {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* Экран головоломки (живёт в клик-зоне, арена скрыта) */
+        #dungeon-screen {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        #dungeon-screen.shake { animation: dungeonShake 0.5s ease-in-out; }
+
+        @keyframes dungeonShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-9px, 4px) rotate(-1.2deg); }
+            40% { transform: translate(9px, -4px) rotate(1.2deg); }
+            60% { transform: translate(-6px, -3px); }
+            80% { transform: translate(6px, 3px); }
+        }
+
+        .puzzle-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-shadow: 0 0 12px rgba(255,170,0,0.35);
+        }
+
+        .puzzle-timer {
+            width: 100%;
+            max-width: 300px;
+            height: 10px;
+            background: #0b0d16;
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #puzzle-timer-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ffaa00 0%, #ff1100 100%);
+            transition: width 0.05s linear;
+        }
+
+        .puzzle-target {
+            display: flex;
+            gap: 10px;
+            min-height: 44px;
+            font-size: 34px;
+            line-height: 44px;
+            color: var(--text-color);
+            text-shadow: 0 0 12px rgba(255,170,0,0.5);
+        }
+
+        .puzzle-target .arrow.pending { opacity: 0.4; }
+        .puzzle-target .arrow.ok {
+            color: #22c55e;
+            text-shadow: 0 0 12px rgba(34,197,94,0.8);
+        }
+
+        .puzzle-keys {
+            display: flex;
+            gap: 8px;
+        }
+
+        .arrow-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: #1a1d2e;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.05s ease, background 0.1s ease;
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.9);
+            background: rgba(255,170,0,0.3);
+        }
+
+        .puzzle-status {
+            font-size: 14px;
+            font-weight: bold;
+            min-height: 18px;
+        }
+
+        .puzzle-status.ok { color: #22c55e; }
+        .puzzle-status.fail { color: #ff1100; }
+
+        /* Секретный босс в данже */
+        .secret-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #a855f7;
+            letter-spacing: 2px;
+            text-shadow: 0 0 14px rgba(168,85,247,0.75);
+        }
+
+        /* === CSS: ТОСТ ЛУТА === */
+        #loot-toast {
+            position: absolute;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 12, 20, 0.96);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 14px 18px;
+            text-align: center;
+            z-index: 30;
+            pointer-events: none;
+            box-shadow: 0 0 34px rgba(255,170,0,0.45);
+        }
+
+        #loot-toast.show { animation: lootPop 2.6s ease forwards; }
+
+        #loot-toast .loot-title {
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        #loot-toast .loot-name {
+            font-size: 20px;
+            font-weight: 900;
+            margin-top: 4px;
+        }
+
+        #loot-toast .loot-desc {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        @keyframes lootPop {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-6deg); }
+            12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18) rotate(2deg); }
+            22%  { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            82%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -62%) scale(0.9); }
+        }
+    
+        /* ============================================================
+           ПК-ВЕРСИЯ (min-width: 769px)
+           Три зоны в ряд: магазин | монета | рюкзак и подземелье.
+           Вкладки отключены — весь HUD виден одновременно.
+           ============================================================ */
+        @media (min-width: 769px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+
+            .game-container {
+                max-width: 100%;
+                width: 100%;
+                height: auto;
+                min-height: 100vh;
+                padding: 24px 32px 32px;
+                display: grid;
+                grid-template-columns: minmax(260px, 1fr) minmax(440px, 1.6fr) minmax(260px, 1fr);
+                grid-template-areas:
+                    "stats stats stats"
+                    "left center right";
+                gap: 24px;
+                align-content: start;
+            }
+
+            .stats-panel { grid-area: stats; }
+            .center-panel { grid-area: center; }
+            .left-panel   { grid-area: left; }
+            .right-panel  { grid-area: right; }
+
+            /* Вкладки на ПК не нужны: все три зоны видны сразу */
+            .tabs { display: none; }
+            .left-panel.hidden,
+            .right-panel.hidden,
+            .tab-page.hidden { display: block !important; }
+
+            /* Одинаковая высота колонок, контент скроллится внутри */
+            .center-panel,
+            .left-panel,
+            .right-panel {
+                height: calc(100vh - 210px);
+                min-height: 460px;
+            }
+
+            .left-panel,
+            .right-panel { display: flex; }
+
+            .left-panel .upgrades-panel,
+            .right-panel .upgrades-panel {
+                flex: 1;
+                max-height: none;
+                min-height: 0;
+                overflow-y: auto;
+            }
+
+            .click-zone { min-height: 460px; }
+
+            /* Монета крупнее — до 320px */
+            #coin-target {
+                width: 320px;
+                height: 320px;
+            }
+
+            .coin-face { font-size: 132px; }
+
+            /* Тост всегда по центру экрана */
+            #loot-toast { position: fixed; }
+        }
+
+        /* ============================================================
+           HUD: статистика (GPC + Титул), магазин с двумя вкладками,
+           Золотой сундук.
+           Правило трещин: .panel-cracks { z-index: 0 } + весь
+           интерактивный контент панелей на z-index: 2 (проверено).
+           ============================================================ */
+
+        /* Верхняя панель: строка GPS + GPC и бейдж титула */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .gpc-display {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .gpc-display::before {
+            content: '';
+            display: inline-block;
+            width: 1px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            margin-right: 14px;
+            vertical-align: -1px;
+        }
+
+        .title-display {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            background: rgba(255, 170, 0, 0.10);
+            border: 1px solid rgba(255, 170, 0, 0.4);
+            border-radius: 999px;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.45);
+            box-shadow: 0 0 12px rgba(255, 170, 0, 0.15);
+        }
+
+        /* Магазин: две под-вкладки */
+        .shop-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .shop-tab-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-dim);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 7px 4px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: normal;      /* три кнопки помещаются и на мобилке */
+            line-height: 1.2;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .shop-tab-btn.active {
+            background: rgba(255, 170, 0, 0.14);
+            color: var(--accent-color);
+            border-color: rgba(255, 170, 0, 0.55);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.18);
+        }
+
+        .shop-page {
+            display: block;
+            position: relative;
+            z-index: 2;      /* контент вкладок строго поверх трещин (z-index: 0) */
+        }
+
+        /* ============================================================
+           ВКЛАДКА «ТОРГОВАЯ ГИЛЬДИЯ» (караваны)
+           ============================================================ */
+        .guild-card {
+            position: relative;
+            z-index: 2;      /* плашка поверх трещин панели (z-index: 0) */
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 170, 0, 0.28);
+            border-radius: 12px;
+            padding: 12px 10px;
+            box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+        }
+
+        .guild-caption {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+            margin-bottom: 6px;
+        }
+
+        .guild-hint {
+            position: relative;
+            z-index: 1;      /* текст поверх любых декоративных линий */
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .guild-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .guild-mult {
+            position: relative;
+            z-index: 1;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            padding: 4px 10px;
+        }
+
+        /* Плашка таймера: строго ПОД текстом ничего нет — трещины панели остаются на z-index: 0 */
+        .guild-timer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.38);
+            border: 1px dashed rgba(255, 170, 0, 0.35);
+            border-radius: 8px;
+            padding: 10px 8px;
+            margin-bottom: 10px;
+            color: var(--text-dim);
+            transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .guild-timer.busy {
+            color: var(--accent-color);
+            border-color: rgba(255, 170, 0, 0.7);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.55);
+            box-shadow: 0 0 12px rgba(255, 170, 0, 0.22), inset 0 0 12px rgba(255, 170, 0, 0.1);
+        }
+
+        .guild-btn {
+            position: relative;
+            z-index: 1;      /* кнопка кликабельна: поверх трещин, не перекрыта текстом */
+            display: block;
+            width: 100%;
+            padding: 10px 8px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 170, 0, 0.55);
+            background: linear-gradient(180deg, rgba(255, 170, 0, 0.16) 0%, rgba(255, 170, 0, 0.05) 100%);
+            color: var(--accent-color);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .guild-btn:hover:not(:disabled) {
+            box-shadow: 0 0 16px rgba(255, 170, 0, 0.45);
+        }
+
+        .guild-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .guild-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* ============================================================
+           ВКЛАДКА «ПРОФИЛЬ»: шапка титула, статистика, таблица титулов
+           ============================================================ */
+        .profile-head {
+            text-align: center;
+            background: rgba(255, 170, 0, 0.07);
+            border: 1px solid rgba(255, 170, 0, 0.35);
+            border-radius: 12px;
+            padding: 12px 10px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 0 18px rgba(255, 170, 0, 0.12);
+        }
+
+        .profile-title-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .profile-title-name {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 14px rgba(255, 170, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.8);
+            margin-top: 2px;
+        }
+
+        .profile-title-mult {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .profile-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .profile-stat b {
+            color: var(--text-color);
+            font-size: 13px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .titles-caption {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .titles-table {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .title-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #0b0d16;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 8px 10px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .title-row .t-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .title-row .t-mult {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .title-row .t-need {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* Достигнутый титул — приглушённая золотая рамка */
+        .title-row.achieved {
+            border-color: rgba(255, 170, 0, 0.35);
+            background: rgba(255, 170, 0, 0.06);
+        }
+
+        /* Текущий титул — яркое неоновое свечение */
+        .title-row.current {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 14px rgba(255, 170, 0, 0.45), inset 0 0 12px rgba(255, 170, 0, 0.15);
+        }
+
+        .title-row.current .t-name {
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        /* ============================================================
+           СНАРЯЖЕНИЕ: три слота (Оружие / Инструмент / Артефакт)
+           z-index: плашки и их текст строго ПОВЕРХ трещин панели
+           ============================================================ */
+        .equip-block {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .equip-caption {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .equip-slots {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+
+        .equip-slot {
+            position: relative;
+            z-index: 1;                /* текст плашки поверх любых линий */
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #0b0d16;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 8px;
+            padding: 7px 9px;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .equip-slot .es-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .equip-slot .es-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-dim);      /* «Пусто» */
+            line-height: 1.3;
+        }
+
+        /* Занятые слоты подсвечены цветом своего типа */
+        .equip-slot.filled.slot-weapon   { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.35), inset 0 0 10px rgba(0,0,0,0.6); }
+        .equip-slot.filled.slot-tool     { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.35), inset 0 0 10px rgba(0,0,0,0.6); }
+        .equip-slot.filled.slot-artifact { border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.35), inset 0 0 10px rgba(0,0,0,0.6); }
+
+        .equip-slot.filled.slot-weapon   .es-value { color: #60a5fa; }
+        .equip-slot.filled.slot-tool     .es-value { color: #4ade80; }
+        .equip-slot.filled.slot-artifact .es-value { color: #c084fc; }
+
+        /* Каталог предметов: цвет рамки = тип слота (вместо редкости) */
+        .inventory-slot.slot-weapon   { border-color: #3b82f6; box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 8px rgba(59, 130, 246, 0.4); }
+        .inventory-slot.slot-tool     { border-color: #22c55e; box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 8px rgba(34, 197, 94, 0.4); }
+        .inventory-slot.slot-artifact { border-color: #a855f7; box-shadow: inset 0 0 14px rgba(0,0,0,0.75), 0 0 8px rgba(168, 85, 247, 0.4); }
+
+        /* Метка в ячейке каталога (вместо кнопки «Надеть/Снять») */
+        .slot-tag {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: bold;
+            line-height: 1;
+            padding: 3px 5px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-dim);
+        }
+
+        .slot-tag.on {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #000;
+        }
+
+        /* ============================================================
+           ДЕРЕВО ТАЛАНТОВ (во вкладке «Профиль»)
+           z-index: блок и кнопки строго ПОВЕРХ трещин панели (z-index: 0)
+           ============================================================ */
+        .talent-tree {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .talent-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .talent-header b {
+            font-size: 15px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        /* Три вертикальные колонки-ветки */
+        .talent-columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .talent-branch {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #0b0d16;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.6);
+        }
+
+        .branch-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-color);
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(255, 170, 0, 0.4);
+            padding-bottom: 6px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+        }
+
+        .talent-btn {
+            position: relative;
+            z-index: 1;                 /* текст и описания поверх любых линий */
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 8px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 170, 0, 0.45);
+            background: linear-gradient(180deg, rgba(255, 170, 0, 0.12) 0%, rgba(255, 170, 0, 0.04) 100%);
+            color: var(--text-color);
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .talent-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(255, 170, 0, 0.45);
+        }
+
+        .talent-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .talent-btn:disabled {
+            border-color: rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-dim);
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        /* Максимальный уровень — зелёная заливка */
+        .talent-btn.maxed {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.10);
+            box-shadow: inset 0 0 12px rgba(34, 197, 94, 0.20);
+        }
+
+        .talent-btn .tb-name  { font-size: 12px; font-weight: bold; line-height: 1.2; }
+        .talent-btn .tb-level { font-size: 13px; font-weight: 900; color: var(--accent-color); }
+        .talent-btn .tb-desc  { font-size: 10px; line-height: 1.3; color: var(--text-dim); }
+        .talent-btn .tb-cost  { font-size: 10px; color: var(--text-dim); }
+        .talent-btn:disabled .tb-level { color: var(--text-dim); }
+        .talent-btn.maxed .tb-level { color: #22c55e; }
+
+        /* Мобилки: те же три колонки, но компактнее */
+        @media (max-width: 480px) {
+            .talent-columns { gap: 6px; }
+            .talent-branch { padding: 6px 4px; }
+            .branch-title { font-size: 10px; }
+            .talent-btn { padding: 6px 4px; }
+            .talent-btn .tb-name  { font-size: 11px; }
+            .talent-btn .tb-desc  { font-size: 9px; }
+            .talent-btn .tb-cost  { font-size: 9px; }
+        }
+
+        /* Золотой сундук: всплывает в случайной точке арены */
+        #chest-target {
+            position: absolute;
+            z-index: 6;
+            width: 76px;
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            cursor: pointer;
+            outline: none;
+            -webkit-user-select: none;
+            user-select: none;
+            background: radial-gradient(circle at 32% 26%, #ffe9a8 0%, #ffcc4d 30%, #c58f2e 68%, #7a5a20 100%);
+            border: 3px solid #c5a059;
+            box-shadow:
+                0 0 26px rgba(255, 170, 0, 0.55),
+                0 10px 22px rgba(0, 0, 0, 0.55),
+                inset 0 -6px 14px rgba(0, 0, 0, 0.35),
+                inset 0 6px 12px rgba(255, 255, 255, 0.3);
+            animation: chestPop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1), chestIdle 2.2s 0.45s ease-in-out infinite;
+            transition: transform 0.08s ease;
+        }
+
+        #chest-target:active {
+            transform: scale(0.9);
+        }
+
+        .chest-face {
+            font-size: 38px;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+            animation: chestGlow 1.6s ease-in-out infinite;
+        }
+
+        @keyframes chestPop {
+            0%   { opacity: 0; transform: scale(0.2) rotate(-14deg); }
+            70%  { opacity: 1; transform: scale(1.14) rotate(4deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes chestIdle {
+            0%, 100% { transform: translateY(0); box-shadow: 0 0 26px rgba(255, 170, 0, 0.55), 0 10px 22px rgba(0, 0, 0, 0.55), inset 0 -6px 14px rgba(0, 0, 0, 0.35), inset 0 6px 12px rgba(255, 255, 255, 0.3); }
+            50%      { transform: translateY(-8px); box-shadow: 0 0 44px rgba(255, 170, 0, 0.85), 0 10px 22px rgba(0, 0, 0, 0.55), inset 0 -6px 14px rgba(0, 0, 0, 0.35), inset 0 6px 12px rgba(255, 255, 255, 0.45); }
+        }
+
+        @keyframes chestGlow {
+            0%, 100% { transform: scale(1) rotate(-2deg); }
+            50%      { transform: scale(1.08) rotate(2deg); }
+        }
