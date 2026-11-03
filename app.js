@@ -1,13 +1,32 @@
         /* --- СЦЕНАРИЙ И ЛОГИКА (JAVASCRIPT) --- */
 
+        // === JS: SVG-ИКОНКИ (замена эмодзи; fill: currentColor, 24x24) ===
+        const ICONS = {
+            coin: '<path fill-rule="evenodd" d="M12 1a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 2.8a8.2 8.2 0 1 1 0 16.4 8.2 8.2 0 0 1 0-16.4z"/><circle cx="12" cy="12" r="7.6"/>',
+            crown: '<path d="M2 8l5 4 5-8 5 8 5-4-3 12H5L2 8z"/>',
+            sword: '<path d="M12 1.5l2.4 4.4v8.6h-4.8V5.9L12 1.5z"/><path d="M7 14.5h10v2.4H7z"/><path d="M11 16.9h2v3.6h-2z"/><circle cx="12" cy="22" r="1.7"/>',
+            pick: '<path d="M2.8 9.6C5.6 5.7 8.6 3.8 12 3.8s6.4 1.9 9.2 5.8l-2.2 1.6c-2.2-3-4.5-4.5-7-4.5s-4.8 1.5-7 4.5L2.8 9.6z"/><path d="M11 5.5h2V22h-2z"/>',
+            gem: '<path d="M7.5 3h9l4 6.2L12 21.8 3.5 9.2 7.5 3z"/>',
+            flask: '<path d="M9.2 2.5h5.6v1.8h-1.3v5.1l4.7 9.5A2.2 2.2 0 0 1 16.2 22H7.8a2.2 2.2 0 0 1-2-3.1l4.7-9.5V4.3H9.2V2.5z"/>',
+            compass: '<path fill-rule="evenodd" d="M12 1.5A10.5 10.5 0 1 0 12 22.5 10.5 10.5 0 0 0 12 1.5zm0 1.8a8.7 8.7 0 1 1 0 17.4 8.7 8.7 0 0 1 0-17.4z"/><path d="M16.4 7.6l-3.1 5.7-5.7 3.1 3.1-5.7 5.7-3.1z"/>',
+            chest: '<path fill-rule="evenodd" d="M4.5 5.5h15A2.5 2.5 0 0 1 22 8v3.5H2V8a2.5 2.5 0 0 1 2.5-2.5zM2 13h20v6.5a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 19.5V13zm8.8 2.5h2.4v4h-2.4z"/>',
+            pencil: '<path d="M3.2 20.8l.9-3.6L16.2 5.1a2.3 2.3 0 1 1 3.2 3.2L7.3 20.4l-4.1.4z"/>',
+            wagon: '<path d="M4.5 11a7.5 7.5 0 0 1 15 0v1.5h-15V11zM2.5 12.5h19v4.5h-19z"/><circle cx="7" cy="19.5" r="2.4"/><circle cx="17" cy="19.5" r="2.4"/>',
+            bag: '<path fill-rule="evenodd" d="M9 2h6a1.5 1.5 0 0 1 1.5 1.5V6H18a3 3 0 0 1 3 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a3 3 0 0 1 3-3h1.5V3.5A1.5 1.5 0 0 1 9 2zM9 12.4h6V17H9v-4.6z"/>'
+        };
+
+        function ico(name, extraClass) {
+            return `<svg class="ui-icon${extraClass ? ' ' + extraClass : ''}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+        }
+
         // === JS: ДИНАМИЧЕСКАЯ ГЕНЕРАЦИЯ ЛУТА (каталога itemDatabase больше нет) ===
         const LOOT_SLOTS = ['weapon', 'tool', 'artifact'];
 
         // База по слотам: имя, род (для склонения качества), иконка и стат, который усиливает бонус
         const SLOT_BASE = {
-            weapon:   { base: 'Гладиус',  gender: 'm', icon: '🗡️', field: 'gpcMultiplier',  desc: 'силе клика' },
-            tool:     { base: 'Кирка',    gender: 'f', icon: '⛏️', field: 'gpsMultiplier',   desc: 'пассивному доходу' },
-            artifact: { base: 'Талисман', gender: 'm', icon: '💎', field: 'chestMultiplier', desc: 'золоту из сундуков' }
+            weapon:   { base: 'Гладиус',  gender: 'm', icon: 'sword', field: 'gpcMultiplier',  desc: 'силе клика' },
+            tool:     { base: 'Кирка',    gender: 'f', icon: 'pick',  field: 'gpsMultiplier',   desc: 'пассивному доходу' },
+            artifact: { base: 'Талисман', gender: 'm', icon: 'gem',   field: 'chestMultiplier', desc: 'золоту из сундуков' }
         };
 
         // Качество: 70% обычное / 25% редкое / 5% эпическое + множитель к бонусу
@@ -19,9 +38,9 @@
 
         // Три слота экипировки (порядок отображения в «Профиле»)
         const EQUIP_SLOTS = [
-            { key: 'weapon',   label: 'Оружие',    icon: '⚔️' },
-            { key: 'tool',     label: 'Инструмент', icon: '🛠️' },
-            { key: 'artifact', label: 'Артефакт',   icon: '🔮' }
+            { key: 'weapon',   label: 'Оружие',    icon: 'sword' },
+            { key: 'tool',     label: 'Инструмент', icon: 'pick' },
+            { key: 'artifact', label: 'Артефакт',   icon: 'gem' }
         ];
 
         const SLOT_LABEL = { weapon: 'Оружие', tool: 'Инструмент', artifact: 'Артефакт' };
@@ -128,9 +147,9 @@
 
         // Ветки дерева: три вертикальные колонки во вкладке «Профиль»
         const TALENT_BRANCHES = [
-            { key: 'warrior_1',   title: 'Ветка Воина',    icon: '⚔️' },
-            { key: 'alchemist_1', title: 'Ветка Алхимика', icon: '⚗️' },
-            { key: 'scout_1',     title: 'Ветка Искателя', icon: '🧭' }
+            { key: 'warrior_1',   title: 'Ветка Воина',    icon: 'sword' },
+            { key: 'alchemist_1', title: 'Ветка Алхимика', icon: 'flask' },
+            { key: 'scout_1',     title: 'Ветка Искателя', icon: 'compass' }
         ];
 
         let gameState = {
@@ -335,14 +354,31 @@
 
         // Обновление интерфейса
         function updateUI() {
-            document.getElementById('gold-count').innerText = `${Math.floor(gameState.gold)} 💰`;
+            document.getElementById('gold-count').innerHTML = `${fmtNum(Math.floor(gameState.gold))} ${ico('coin')}`;
             document.getElementById('gps-count').innerText = `Пассивный доход: ${fmtNum(totalGps())}/сек`;
             document.getElementById('gpc-count').innerText =
                 `За клик: ${totalClickPower()} · Крит: ${Math.round(totalCritChance() * 100)}% (×${gameState.critMultiplier})`;
 
             // Текущий титул (множитель Золотого Сундука)
             const title = currentTitle();
-            document.getElementById('title-count').innerText = `⚜ Титул: ${title.name} (×${title.mult})`;
+            document.getElementById('title-count').innerHTML = `${ico('crown', 'sm')} Титул: ${title.name} (×${title.mult})`;
+
+            // Прогресс до следующего титула (механика rank-progress)
+            const ti = gameState.currentTitle || 0;
+            const nextTitle = TITLES[ti + 1];
+            const prog = document.getElementById('title-progress');
+            if (nextTitle) {
+                const prevNeed = TITLES[ti].need;
+                const total = gameState.totalGoldEarned || 0;
+                const pct = Math.min(100, Math.max(0,
+                    ((total - prevNeed) / (nextTitle.need - prevNeed)) * 100));
+                prog.classList.add('visible');
+                document.getElementById('title-progress-fill').style.width = `${pct.toFixed(1)}%`;
+                document.getElementById('title-progress-label').innerText =
+                    `До титула «${nextTitle.name}»: ${fmtNum(Math.max(0, nextTitle.need - total))} золота`;
+            } else {
+                prog.classList.remove('visible');
+            }
 
             // === Боссовые HP/имя на главной больше не рисуем (только в Подземелье) ===
 
@@ -355,8 +391,8 @@
             // Надетое снаряжение (строка над магазином)
             const worn = EQUIP_SLOTS
                 .filter(s => gameState.equipment[s.key])
-                .map(s => `${s.icon} ${gameState.equipment[s.key].name}`);
-            document.getElementById('stat-bonus').innerText =
+                .map(s => `${ico(s.icon, 'sm')} ${gameState.equipment[s.key].name}`);
+            document.getElementById('stat-bonus').innerHTML =
                 worn.length ? `Надето: ${worn.join(' · ')}` : 'Слоты экипировки пусты';
 
             // === Вкладки и три зоны HUD (ПК / мобилки) ===
@@ -560,7 +596,7 @@
                 const poor = gameState.talentPoints < t.cost;
                 const off = maxed || poor;
                 return `<div class="talent-branch">
-                    <div class="branch-title">${br.icon} ${br.title}</div>
+                    <div class="branch-title">${ico(br.icon, 'sm')} ${br.title}</div>
                     <button class="talent-btn${maxed ? ' maxed' : ''}" data-talent="${br.key}"${off ? ' disabled' : ''}>
                         <span class="tb-name">${t.name}</span>
                         <span class="tb-level">${t.level}/${t.maxLevel}</span>
@@ -599,7 +635,7 @@
                 document.getElementById('equip-slots').innerHTML = EQUIP_SLOTS.map(s => {
                     const it = equippedItem(s.key);
                     return `<div class="equip-slot${it ? ' filled slot-' + s.key : ''}">
-                        <span class="es-label">${s.icon} ${s.label}</span>
+                        <span class="es-label">${ico(s.icon, 'sm')} ${s.label}</span>
                         <span class="es-value">${it ? `${it.name} [${itemBonusText(it)}]` : 'Пусто'}</span>
                     </div>`;
                 }).join('');
@@ -673,7 +709,7 @@
                 .filter(x => x.it);
 
             if (!drops.length) {
-                box.innerHTML = '<div class="inv-empty"><span class="empty-icon">🎒</span>' +
+                box.innerHTML = `<div class="inv-empty"><span class="empty-icon">${ico('bag')}</span>` +
                     'Рюкзак пуст — добычай лут из боссов в Подземелье</div>';
                 return;
             }
@@ -681,7 +717,7 @@
             box.innerHTML = drops.map(({ s, it }) => {
                 const short = (itemBonusText(it).split(', ')[0]) || it.description;
                 return `<div class="inventory-slot rarity-${it.rarity || 'common'} equipped slot-${s.key}" title="${it.name} · ${it.description}">
-                    <span class="slot-icon">${it.icon || s.icon}</span>
+                    <span class="slot-icon">${ico(it.icon || s.icon)}</span>
                     <span class="slot-bonus">${short}</span>
                     <span class="slot-tag on">Надето</span>
                 </div>`;
@@ -695,6 +731,7 @@
         let dungeonDeadline = 0;
         let dungeonInterval = null;
         let activeTab = 'sec-gear';
+        let sheetOpen = false;   // мобилки: шторка вкладки закрыта по умолчанию
         let lastInvSig = '';
         let lastShopSig = '';
         let lastEquipSig = '';
@@ -726,6 +763,7 @@
         // Вход в подземелье (откат 30 секунд)
         function startDungeon() {
             if (gameState.isInDungeon || gameState.dungeonCooldown > 0) return;
+            sheetOpen = false;               // шторка закрывается: головоломка в центре экрана
             const dirs = ['L', 'U', 'R', 'D'];
             gameState.dungeonCombo = Array.from({ length: 4 },
                 () => dirs[Math.floor(Math.random() * dirs.length)]);
@@ -853,35 +891,52 @@
         // Синхронизация видимости зон и страниц вкладок под ширину экрана
         function syncLayout() {
             const desk = isDesktop();
+            const left = document.getElementById('left-panel');
+            const right = document.getElementById('right-panel');
+            const scrim = document.getElementById('sheet-scrim');
 
+            // Подсветка кнопки: на мобилках — только пока шторка открыта
             document.querySelectorAll('.tab-btn').forEach(b =>
-                b.classList.toggle('active', b.dataset.tab === activeTab));
+                b.classList.toggle('active', b.dataset.tab === activeTab && (desk || sheetOpen)));
 
             if (desk) {
                 // ПК: вкладки ничего не скрывают — видны все три зоны
                 document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('hidden'));
-                document.getElementById('left-panel').classList.remove('hidden');
-                document.getElementById('right-panel').classList.remove('hidden');
+                left.classList.remove('hidden', 'sheet-open');
+                right.classList.remove('hidden', 'sheet-open');
+                scrim.classList.remove('show');
                 return;
             }
 
-            // Мобилки: активна только выбранная страница/зона
+            // Мобилки: контент страницы по активной вкладке
             document.querySelectorAll('.tab-page').forEach(p =>
                 p.classList.toggle('hidden', p.id !== activeTab));
-            document.getElementById('left-panel').classList.toggle('hidden', activeTab !== 'sec-gear');
-            document.getElementById('right-panel').classList.toggle('hidden',
-                activeTab !== 'sec-inventory' && activeTab !== 'sec-dungeon');
+
+            // Панели — «шторки»: открываются только по кнопке в таб-баре
+            left.classList.remove('hidden');
+            right.classList.remove('hidden');
+            left.classList.toggle('sheet-open', sheetOpen && activeTab === 'sec-gear');
+            right.classList.toggle('sheet-open', sheetOpen &&
+                (activeTab === 'sec-inventory' || activeTab === 'sec-dungeon'));
+            scrim.classList.toggle('show', sheetOpen);
         }
 
-        // Переключение вкладок
+        // Переключение вкладок: на мобилках кнопка открывает/закрывает шторку
         function switchTab(tabId) {
-            activeTab = tabId;
-
-            // Проверка ширины экрана: на ПК скрытие вкладок не применяется
-            if (window.innerWidth >= DESKTOP_MIN_WIDTH) {
+            if (isDesktop()) {
+                activeTab = tabId;
                 document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('hidden'));
                 document.getElementById('left-panel').classList.remove('hidden');
                 document.getElementById('right-panel').classList.remove('hidden');
+                updateUI();
+                return;
+            }
+
+            if (sheetOpen && activeTab === tabId) {
+                sheetOpen = false;            // повторный тап по активной кнопке — закрыть
+            } else {
+                activeTab = tabId;
+                sheetOpen = true;             // новый тап — выплывающая шторка
             }
 
             updateUI();   // внутри — syncLayout() с учётом текущей ширины
@@ -890,6 +945,28 @@
         // Вкладки нижней панели
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        // Тап по затемнению закрывает шторку вкладки
+        document.getElementById('sheet-scrim').addEventListener('click', () => {
+            if (!sheetOpen) return;
+            sheetOpen = false;
+            updateUI();
+        });
+
+        // === JS: ЗАПРЕТ ВЫДЕЛЕНИЯ ТЕКСТА ПРИ ТАПАХ (мобильные, Яндекс.Браузер) ===
+        // Браузер пытается выделить текст при частых тапах — гасим на уровне документа
+        document.addEventListener('selectstart', (e) => {
+            const t = e.target;
+            if (t && t.closest && t.closest('input, textarea, [contenteditable="true"], iframe')) return;
+            e.preventDefault();
+        });
+
+        // Долгое нажатие больше не вызывает контекстное меню по элементам игры
+        document.addEventListener('contextmenu', (e) => {
+            const t = e.target;
+            if (t && t.closest && t.closest('#feedbackModal, iframe, input, textarea')) return;
+            e.preventDefault();
         });
 
         // Пересборка раскладки при смене ширины окна (мобилка <-> ПК)
@@ -977,7 +1054,7 @@
             const reward = Math.floor(totalGps() * c.duration * c.rewardMultiplier);
             addGold(reward);
             dropLoot({ name: 'Караван вернулся' },
-                `Торговый путь принёс: ${fmtNum(reward)} 💰`, 'Торговая Гильдия');
+                `Торговый путь принёс: ${fmtNum(reward)} золота`, 'Торговая Гильдия');
             updateUI();
             saveGame();
         }
@@ -1005,7 +1082,7 @@
                 btn.innerText = 'Отправить Караван (5 мин)';
                 timer.classList.remove('busy');
                 timer.innerText = gpsOk
-                    ? `Ожидаемая награда: ${fmtNum(totalGps() * c.duration * c.rewardMultiplier)} 💰`
+                    ? `Ожидаемая награда: ${fmtNum(totalGps() * c.duration * c.rewardMultiplier)} золота`
                     : 'Нужен пассивный доход (GPS > 0), чтобы отправить караван';
             }
         }

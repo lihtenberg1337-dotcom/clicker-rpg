@@ -7,12 +7,61 @@
             --text-dim: #94a3b8;
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        /* === SVG-ИКОНКИ (замена эмодзи): 24x24, цвет из текста === */
+        .ui-icon {
+            width: 24px;
+            height: 24px;
+            flex: 0 0 auto;
+            display: inline-block;
+            vertical-align: -5px;
+            fill: currentColor;
+        }
+
+        .ui-icon.sm {
+            width: 16px;
+            height: 16px;
+            vertical-align: -3px;
+        }
+
+        /* Крупные иконки монеты и сундука масштабируются от font-size контейнера */
+        .coin-face .ui-icon,
+        .chest-face .ui-icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: baseline;
+        }
+
+        /* === МОБИЛЬНЫЕ ЖЕСТЫ: без double-tap-zoom, задержки тапа и выделения === */
+        button,
+        [role="button"],
+        .tabs,
+        .shop-tabs,
+        .tab-btn,
+        .shop-tab-btn,
+        .guild-btn,
+        .talent-btn,
+        .dungeon-btn,
+        .feedback-btn,
+        #click-zone,
+        #coin-target,
+        #chest-target,
+        .upgrade-btn,
+        .arrow-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body {
@@ -23,7 +72,11 @@
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            height: 100dvh;   /* динамическая высота: сворачиваемая адресная строка Яндекс.Браузера не режет низ экрана */
             overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
         }
 
         .game-container {
@@ -59,6 +112,10 @@
             right: 8px;
             z-index: 2;              /* поверх фоновых декораций панели */
             max-width: 170px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             padding: 5px 9px;
             font-size: 10px;
             font-weight: bold;
@@ -106,6 +163,10 @@
         .feedback-title {
             position: relative;
             z-index: 1;              /* заголовок поверх любых декоративных линий */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             text-align: center;
             font-size: 14px;
             font-weight: 900;
@@ -1053,6 +1114,9 @@
         }
 
         .guild-caption {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
             font-weight: 900;
             letter-spacing: 1px;
@@ -1309,6 +1373,9 @@
         }
 
         .equip-slot .es-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 10px;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -1404,6 +1471,9 @@
         }
 
         .branch-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 11px;
             font-weight: bold;
             color: var(--accent-color);
@@ -1521,4 +1591,190 @@
         @keyframes chestGlow {
             0%, 100% { transform: scale(1) rotate(-2deg); }
             50%      { transform: scale(1.08) rotate(2deg); }
+        }
+
+        /* ============================================================
+           ПРОГРЕСС ДО СЛЕДУЮЩЕГО ТИТУЛА
+           Механика rank-progress позаимствована из «Age of Alchemy & Sword»:
+           тонкий золотой бар под бейджем титула в HUD.
+           ============================================================ */
+        .title-progress {
+            display: none;
+            margin: 8px auto 0;
+            width: min(320px, 100%);
+            position: relative;
+            z-index: 2;              /* поверх декоративных трещин панели */
+        }
+
+        .title-progress.visible { display: block; }
+
+        .title-progress-track {
+            position: relative;
+            height: 13px;
+            background: #0b0d16;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+        }
+
+        .title-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #c5a059 0%, var(--accent-color) 60%, #ffe08a 100%);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.55);
+            transition: width 0.35s ease-out;
+        }
+
+        .title-progress-label {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+            letter-spacing: 0.4px;
+            color: var(--text-dim);
+        }
+
+        /* Затемнение под шторкой вкладки (только мобилки, где .show) */
+        #sheet-scrim {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 240;
+            background: rgba(4, 6, 12, 0.62);
+        }
+
+        /* ============================================================
+           МОБИЛЬНАЯ РАСКЛАДКА (<=768px)
+           Механика позаимствована из «Age of Alchemy & Sword»:
+           фиксированный таб-бар внизу (иконка + подпись, safe-area),
+           одноколоночный контент со свободной прокруткой — ни один
+           элемент управления не остаётся за краем экрана.
+           ============================================================ */
+        @media (max-width: 768px) {
+            body {
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden;
+                overscroll-behavior: none;
+            }
+
+            .game-container {
+                height: 100vh;
+                height: 100dvh;
+                justify-content: flex-start;
+                gap: 12px;
+                padding: 12px 12px calc(86px + env(safe-area-inset-bottom, 0px));
+                overflow-y: auto;
+                overscroll-behavior-y: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Зона клика растёт по контенту: монета сверху, магазин ниже */
+            .center-panel {
+                flex: 0 0 auto;
+                min-height: 40vh;
+                min-height: 40dvh;
+            }
+
+            .click-zone { min-height: 40vh; min-height: 40dvh; }
+
+            /* Панель не ограничена по высоте — скроллит весь контейнер */
+            .upgrades-panel { max-height: none; }
+
+            /* Нижний таб-бар: фиксирован, всегда доступен */
+            .tabs {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 300;
+                gap: 8px;
+                margin: 0;
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+                border-radius: 0;
+                border: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.10);
+                background: rgba(18, 21, 34, 0.97);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.55);
+            }
+
+            .tab-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                min-height: 52px;
+                padding: 6px 4px;
+                font-size: 10px;
+                line-height: 1.15;
+                text-align: center;
+            }
+
+            .tab-btn .ui-icon {
+                width: 22px;
+                height: 22px;
+                vertical-align: middle;
+            }
+
+            .tab-btn.active {
+                background: rgba(255, 170, 0, 0.16);
+                border-color: rgba(255, 170, 0, 0.60);
+                box-shadow: 0 0 14px rgba(255, 170, 0, 0.30);
+                text-shadow: 0 0 8px rgba(255, 170, 0, 0.55);
+            }
+
+            /* Тост лута всегда поверх таб-бара */
+            #loot-toast { z-index: 320; }
+
+            /* ============================================================
+               ШТОРКА ВКЛАДКИ: панели закрыты по умолчанию и выезжают
+               снизу только по кнопке в таб-баре (механика bottom-sheet).
+               ============================================================ */
+            .left-panel,
+            .right-panel {
+                position: fixed;
+                left: 8px;
+                right: 8px;
+                top: auto;
+                bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+                width: auto;
+                z-index: 250;                 /* под таб-баром (300), над затемнением (240) */
+                max-height: min(72dvh, calc(100dvh - 220px));
+                overflow-y: auto;
+                overscroll-behavior: contain; /* скролл не уходит на фон игры */
+                transform: translateY(calc(100% + 90px));
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.25, 1),
+                            opacity 0.22s ease,
+                            visibility 0s linear 0.32s;
+            }
+
+            .left-panel.sheet-open,
+            .right-panel.sheet-open {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.25, 1),
+                            opacity 0.22s ease;
+            }
+
+            /* Тап по затемнению — закрыть шторку */
+            #sheet-scrim.show {
+                display: block;
+                animation: sheetFadeIn 0.25s ease;
+            }
+
+            @keyframes sheetFadeIn {
+                from { opacity: 0; }
+                to   { opacity: 1; }
+            }
+
+            /* Без шторки центральная зона забирает всё свободное место */
+            .center-panel { flex: 1 1 auto; }
         }
