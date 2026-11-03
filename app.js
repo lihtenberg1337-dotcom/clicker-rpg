@@ -59,11 +59,18 @@
             return Math.floor(u.basePrice * Math.pow(u.priceMultiplier, lvl));
         }
 
-        // Компактный формат для крупных чисел (12.5k / 1.4M)
+        // Компактный формат для крупных чисел (12.5k / 1.4M / 3.2B / 1.1T / 4.5Qa)
         function fmtNum(n) {
-            if (n >= 1e6) return (Math.floor(n) / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-            if (n >= 1e4) return (Math.floor(n) / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
-            return String(Math.round(n * 100) / 100);   // дробные статы после талантов
+            const v = Math.round((Number(n) || 0) * 100) / 100;
+            if (v < 1e4) return String(v);                 // дробные статы после талантов
+            const units = [
+                [1e21, 'Sx'], [1e18, 'Qi'], [1e15, 'Qa'],
+                [1e12, 'T'],  [1e9, 'B'],   [1e6, 'M'], [1e3, 'k']
+            ];
+            for (const [size, suffix] of units) {
+                if (v >= size) return (Math.floor(v / size * 10) / 10).toFixed(1).replace(/\.0$/, '') + suffix;
+            }
+            return String(v);
         }
 
         // === JS: ТИТУЛЫ (множитель Золотого Сундука) ===
@@ -112,19 +119,43 @@
             }
         }        // Глобальное состояние игры (с заделом под RPG параметры)
         // === JS: КАТАЛОГИ МАГАЗИНА — единый источник правды ===
+        // 15 клик-апгрейдов: ранние дешёвые (окупаются за десятки кликов),
+        // поздние дорожают быстрее, чем растёт бонус — «лёгкий старт, тяжёлый финиш»
         const DEFAULT_CLICK_UPGRADES = {
-            click_power_1: { name: "Заточка оружия",         level: 0, basePrice: 10,    priceMultiplier: 1.12, bonusPerLevel: 1 },
-            click_power_2: { name: "Тяжелая рукоять",        level: 0, basePrice: 150,   priceMultiplier: 1.14, bonusPerLevel: 5 },
-            click_power_3: { name: "Зачарованное лезвие",    level: 0, basePrice: 1500,  priceMultiplier: 1.16, bonusPerLevel: 25 },
-            click_power_4: { name: "Ртутный сплав",          level: 0, basePrice: 12000, priceMultiplier: 1.18, bonusPerLevel: 150 }
+            click_power_1:  { name: "Заточка оружия",          level: 0, basePrice: 10,             priceMultiplier: 1.12, bonusPerLevel: 1 },
+            click_power_2:  { name: "Тяжелая рукоять",         level: 0, basePrice: 150,            priceMultiplier: 1.14, bonusPerLevel: 5 },
+            click_power_3:  { name: "Зачарованное лезвие",     level: 0, basePrice: 1500,           priceMultiplier: 1.16, bonusPerLevel: 25 },
+            click_power_4:  { name: "Ртутный сплав",           level: 0, basePrice: 12000,          priceMultiplier: 1.18, bonusPerLevel: 150 },
+            click_power_5:  { name: "Руны берсерка",           level: 0, basePrice: 80000,          priceMultiplier: 1.19, bonusPerLevel: 650 },
+            click_power_6:  { name: "Клинок чёрной стали",     level: 0, basePrice: 450000,         priceMultiplier: 1.20, bonusPerLevel: 2800 },
+            click_power_7:  { name: "Печать дракона",          level: 0, basePrice: 2500000,        priceMultiplier: 1.21, bonusPerLevel: 12000 },
+            click_power_8:  { name: "Кровь титана",            level: 0, basePrice: 14000000,       priceMultiplier: 1.22, bonusPerLevel: 52000 },
+            click_power_9:  { name: "Ковка звёзд",             level: 0, basePrice: 80000000,       priceMultiplier: 1.23, bonusPerLevel: 220000 },
+            click_power_10: { name: "Эссенция бездны",         level: 0, basePrice: 450000000,      priceMultiplier: 1.24, bonusPerLevel: 900000 },
+            click_power_11: { name: "Молот первотворца",       level: 0, basePrice: 2500000000,     priceMultiplier: 1.25, bonusPerLevel: 3600000 },
+            click_power_12: { name: "Осколок мироздания",      level: 0, basePrice: 14000000000,    priceMultiplier: 1.26, bonusPerLevel: 14000000 },
+            click_power_13: { name: "Воля павшего бога",       level: 0, basePrice: 80000000000,    priceMultiplier: 1.27, bonusPerLevel: 55000000 },
+            click_power_14: { name: "Пламя конца времён",      level: 0, basePrice: 450000000000,   priceMultiplier: 1.28, bonusPerLevel: 220000000 },
+            click_power_15: { name: "Клинок абсолютной пустоты", level: 0, basePrice: 2500000000000, priceMultiplier: 1.30, bonusPerLevel: 850000000 }
         };
 
+        // 15 пассивных построек: окупаемость растёт с 50 сек на старте до ~10 минут в финале
         const DEFAULT_PASSIVE_BUILDINGS = {
-            auto_clicker: { name: "Призрачный кликер",       count: 0, basePrice: 50,     priceMultiplier: 1.15, gpsPerUnit: 1 },
-            miner:        { name: "Шахтер-гном",             count: 0, basePrice: 400,    priceMultiplier: 1.15, gpsPerUnit: 8 },
-            alchemist:    { name: "Алхимическая лаборатория", count: 0, basePrice: 3000,   priceMultiplier: 1.15, gpsPerUnit: 47 },
-            monument:     { name: "Древний монумент",        count: 0, basePrice: 22000,  priceMultiplier: 1.16, gpsPerUnit: 260 },
-            factory:      { name: "Магическая фабрика",      count: 0, basePrice: 140000, priceMultiplier: 1.17, gpsPerUnit: 1400 }
+            auto_clicker:  { name: "Призрачный кликер",        count: 0, basePrice: 50,             priceMultiplier: 1.15, gpsPerUnit: 1 },
+            miner:         { name: "Шахтер-гном",              count: 0, basePrice: 400,            priceMultiplier: 1.15, gpsPerUnit: 8 },
+            alchemist:     { name: "Алхимическая лаборатория",  count: 0, basePrice: 3000,           priceMultiplier: 1.15, gpsPerUnit: 47 },
+            monument:      { name: "Древний монумент",         count: 0, basePrice: 22000,          priceMultiplier: 1.16, gpsPerUnit: 260 },
+            factory:       { name: "Магическая фабрика",       count: 0, basePrice: 140000,         priceMultiplier: 1.17, gpsPerUnit: 1400 },
+            observatory:   { name: "Обсерватория магов",        count: 0, basePrice: 850000,         priceMultiplier: 1.18, gpsPerUnit: 7500 },
+            dwarf_forge:   { name: "Гномья кузница",           count: 0, basePrice: 5000000,        priceMultiplier: 1.19, gpsPerUnit: 38000 },
+            dragon_mines:  { name: "Драконьи рудники",         count: 0, basePrice: 30000000,       priceMultiplier: 1.20, gpsPerUnit: 190000 },
+            sunken_temple: { name: "Затонувший храм",          count: 0, basePrice: 180000000,      priceMultiplier: 1.21, gpsPerUnit: 950000 },
+            sky_island:    { name: "Парящий остров",           count: 0, basePrice: 1000000000,     priceMultiplier: 1.22, gpsPerUnit: 4500000 },
+            portal:        { name: "Портал иных миров",        count: 0, basePrice: 6000000000,     priceMultiplier: 1.23, gpsPerUnit: 22000000 },
+            titan_forge:   { name: "Кузня титанов",            count: 0, basePrice: 35000000000,    priceMultiplier: 1.24, gpsPerUnit: 105000000 },
+            alchemy_cathedral: { name: "Собор алхимии",        count: 0, basePrice: 200000000000,   priceMultiplier: 1.25, gpsPerUnit: 500000000 },
+            world_core:    { name: "Ядро мироздания",          count: 0, basePrice: 1200000000000,  priceMultiplier: 1.26, gpsPerUnit: 2400000000 },
+            creator_throne: { name: "Трон творца",             count: 0, basePrice: 7000000000000,  priceMultiplier: 1.28, gpsPerUnit: 11000000000 }
         };
 
         function cloneCatalog(defs) {
@@ -501,7 +532,7 @@
                     <div class="upgrade-item">
                         <div class="upgrade-info">
                             <h4>${u.name} <span class="upg-lvl">ур. ${u.level}</span></h4>
-                            <p>+${u.bonusPerLevel} к клику${u.level ? ` · всего +${u.level * u.bonusPerLevel}` : ''}</p>
+                            <p>+${fmtNum(u.bonusPerLevel)} к клику${u.level ? ` · всего +${fmtNum(u.level * u.bonusPerLevel)}` : ''}</p>
                         </div>
                         <button class="upgrade-btn" data-buy="click:${key}">Цена: ${fmtNum(upgradePrice('click', key))}</button>
                     </div>`).join('');
@@ -511,7 +542,7 @@
                     <div class="upgrade-item">
                         <div class="upgrade-info">
                             <h4>${b.name} <span class="upg-lvl">×${b.count}</span></h4>
-                            <p>+${b.gpsPerUnit} GPS/сек${b.count ? ` · всего +${b.count * b.gpsPerUnit}` : ''}</p>
+                            <p>+${fmtNum(b.gpsPerUnit)} GPS/сек${b.count ? ` · всего +${fmtNum(b.count * b.gpsPerUnit)}` : ''}</p>
                         </div>
                         <button class="upgrade-btn" data-buy="passive:${key}">Цена: ${fmtNum(upgradePrice('passive', key))}</button>
                     </div>`).join('');
@@ -987,6 +1018,38 @@
                 document.querySelectorAll('.shop-page').forEach(p =>
                     p.classList.toggle('hidden', p.id !== btn.dataset.shop));
             });
+        });
+
+        // === JS: ОТДЕЛЬНАЯ ВКЛАДКА «ПРОФИЛЬ» (кнопка в правом верхнем углу) ===
+        let profileOpenedAt = 0;   // защита от «фантомного» клика по затемнению сразу после открытия
+
+        function openProfile() {
+            profileOpenedAt = Date.now();
+            document.getElementById('profile-view').classList.remove('hidden');
+            updateUI();      // свежие цифры и таланты к моменту открытия
+        }
+
+        function closeProfile() {
+            document.getElementById('profile-view').classList.add('hidden');
+        }
+
+        document.getElementById('profile-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            openProfile();
+        });
+        document.getElementById('profile-close').addEventListener('click', closeProfile);
+
+        // Тап по затемнению вокруг панели закрывает профиль
+        document.getElementById('profile-view').addEventListener('click', (e) => {
+            if (e.target.id !== 'profile-view') return;
+            if (Date.now() - profileOpenedAt < 400) return;   // тот же тап не должен сразу закрыть панель
+            closeProfile();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('profile-view').classList.contains('hidden')) {
+                closeProfile();
+            }
         });
 
         // === JS: ЗОЛОТОЙ СУНДУК ===
